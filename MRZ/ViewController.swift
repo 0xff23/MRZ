@@ -27,13 +27,9 @@ class ViewController: UIViewController {
   
   override func viewDidLoad() {
     super.viewDidLoad()
-    
-    tableView.dataSource = self
-    tableView.delegate = self
-    
+    setupTableView()
     view.accessibilityIdentifier = "searchView"
   }
-  
   
   @IBAction func searhByMRZ(_ sender: Any) {
     guard let passportCode = mrzInputField.text else { return }
@@ -43,68 +39,67 @@ class ViewController: UIViewController {
       return
     }
     
-    if isContyCodeIncluded(passportCode) && isPassportFormatt(passportCode) {
+    if isContryCodeIncluded(passportCode) && isPassportFormat(passportCode) {
       DispatchQueue.main.async {
-        self.firstLastNameLabel.text = self.getPersonID(passportCode) ?? "Incorrect barcode"
+        self.firstLastNameLabel.text = self.parseID(passportCode) ?? "Incorrect barcode"
       }
     } else {
       AlertView.create(.alert, title: "Error", message: "Barcode invalid. Please try again.").show()
       return
     }
-    
   }
   
-  func isContyCodeIncluded(_ barCode: String) -> Bool {
+  func setupTableView() {
+    tableView.dataSource = self
+    tableView.delegate = self
+  }
+  
+  func isContryCodeIncluded(_ barCode: String) -> Bool {
     // Assuming that Code will be at the same location all the time, check prefix
     return barCode.prefix(6).contains("USA")
   }
   
-  func isPassportFormatt(_ barCode: String) -> Bool {
+  func isPassportFormat(_ barCode: String) -> Bool {
     // P, indicating passport. So if we have something else just return false to stop process.
     return (barCode.first { $0.uppercased() == "P"} != nil)
   }
+
+  func parseID(_ barCode: String) -> String? {
+    let firstName = getNames(from: barCode).secondary
+    var lastName = ""
+    if let rangeTwo = barCode.range(of: "<<") {
+      guard let countryCodeUpperBound = barCode.range(of: "USA")?.upperBound else { return nil }
+      
+      lastName = String(barCode[countryCodeUpperBound..<rangeTwo.upperBound].dropLast(2))
+    }
+    // Search profiles with first and last name in git
+    searchGithubProfiles(by: firstName, and: lastName)
+    
+    return String("\(firstName) \(lastName)")
+  }
   
-  private func names(from string: String) -> (primary: String, secondary: String) {
-    let identifiers = string.trimmingCharacters(in: CharacterSet(charactersIn: "<")).components(separatedBy: "<<").map({$0.replacingOccurrences(of: "<", with: " ")})
+  func getNames(from barCode: String) -> (primary: String, secondary: String) {
+    let identifiers = barCode.trimmingCharacters(in: CharacterSet(charactersIn: "<")).components(separatedBy: "<<").map({$0.replacingOccurrences(of: "<", with: " ")})
     let secondaryID = identifiers.indices.contains(1) ? identifiers[1] : ""
     
     return (primary: identifiers[0], secondary: secondaryID)
   }
   
-  func getPersonID(_ barCode: String) -> String? {
-    var firstName = ""
-    var lastName = ""
-    
-    if let rangeTwo = barCode.range(of: "<<") {
-      guard let firstNameUpperBound = barCode.range(of: "<<<<")?.upperBound else { return nil }
-      guard let countryCodeUpperBound = barCode.range(of: "USA")?.upperBound else { return nil }
-      
-      // Get first and last name using substring
-      firstName = String(barCode[rangeTwo.upperBound..<firstNameUpperBound].dropLast(4))
-      lastName = String(barCode[countryCodeUpperBound..<rangeTwo.upperBound].dropLast(2))
-    }
-  
-    
-    let extractedName = names(from: barCode)
-    firstName = extractedName.secondary
-    
-    // Search profiles with first and last name in git
+  func searchGithubProfiles(by firstName: String, and lastName: String) {
     GithubAPICleint().getProfilesList(withFirstName: firstName, lastName: lastName) { result in
       self.profiles.removeAll()
       switch result {
       case .success(let data):
-          do {
-            let res = try JSONDecoder().decode(GithubProfileModel.self, from: data)
-            self.profiles.append(contentsOf: res.items)
-          } catch {
-            print(error)
-          }
+        do {
+          let res = try JSONDecoder().decode(GithubProfileModel.self, from: data)
+          self.profiles.append(contentsOf: res.items)
+        } catch {
+          print(error)
+        }
       case .failure(let error):
         AlertView.create(.alert, title: "Error", message: error.localizedDescription).show()
       }
     }
-    
-    return String("\(firstName) \(lastName)")
   }
   
 }

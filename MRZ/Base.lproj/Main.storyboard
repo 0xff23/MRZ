@@ -33,7 +33,7 @@
                                     <action selector="searhByMRZ:" destination="BYZ-38-t0r" eventType="touchUpInside" id="wh1-tZ-xNp"/>
                                 </connections>
                             </button>
-                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" misplaced="YES" text="Label" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="vl5-46-CzU">
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" misplaced="YES" text=" " textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="vl5-46-CzU">
                                 <rect key="frame" x="24" y="227" width="370" height="39"/>
                                 <accessibility key="accessibilityConfiguration" identifier="id_label"/>
                                 <constraints>

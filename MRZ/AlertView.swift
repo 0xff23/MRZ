@@ -14,10 +14,10 @@ class AlertView {
   
   enum Result {
     case success
-    case failure(ALRTError)
+    case failure(AlertError)
   }
   
-  enum ALRTError: Error {
+  enum AlertError: Error {
     case alertControllerNil
     case popoverNotSet
     case sourceViewControllerNil
